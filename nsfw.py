@@ -4,6 +4,7 @@ from mitmproxy import http
 from mitmproxy import ctx
 import tempfile
 import json
+from blacklist import blacklist
 
 def checkNSFWPredictions(predictions):
    isSafe = False;
@@ -25,34 +26,45 @@ class NSFWDetector:
           default=""
         )
 
+    def request(self, flow: http.HTTPFlow) -> None:
+      blackListed = False;
+      url = flow.request.pretty_host
+
+      for site in blacklist:
+         blackListed = site in url
+        
+         if (blackListed):
+          flow.request.headers["x-blacklisted-site"] = 'True'
+          break
+
     def response(self, flow: http.HTTPFlow) -> None:
+        print(flow.request.headers)
+
         if (flow.response.headers.get("Content-Type", "").startswith("image")):
-            with tempfile.NamedTemporaryFile(delete_on_close=True,delete=True) as tempFile:
-              tempFile.write(flow.response.content);
+          if (flow.request.headers.get('x-blacklisted-site') == 'True'):
+           blockImage = open('block-image.jpeg', mode='rb').read()
+           flow.response.content = blockImage;
+           flow.response.headers["content-type"] = "image/jpeg"
+           return
 
-              command = ctx.options.command.replace('<dir>', tempFile.name);
-              commandArr = command.split(' ');
-              result = subprocess.run(commandArr, capture_output=True);
+          with tempfile.NamedTemporaryFile(delete_on_close=True,delete=True) as tempFile:
+            tempFile.write(flow.response.content);
 
-              if (result.stderr):
-                print("ERROR")
-                return
+            command = ctx.options.command.replace('<dir>', tempFile.name);
+            commandArr = command.split(' ');
+            result = subprocess.run(commandArr, capture_output=True);
 
-              if (result.stdout):
-                 print("SUCCESS")
-                 jsonResult = json.loads(result.stdout)
+            if (result.stderr):
+              return
 
-                 print(jsonResult)
+            if (result.stdout):
+                jsonResult = json.loads(result.stdout)
 
-                 isNSFW = jsonResult['has_nudity'] == True or checkNSFWPredictions(jsonResult['predictions'])
+                isNSFW = jsonResult['has_nudity'] == True or checkNSFWPredictions(jsonResult['predictions'])
 
-                 if (isNSFW):
-                    blockImage = open('block-image.jpeg', mode='rb').read()
-                    flow.response.content = blockImage;
-                    flow.response.headers["content-type"] = "image/jpeg"
-
-
-
-
+                if (isNSFW):
+                  blockImage = open('block-image.jpeg', mode='rb').read()
+                  flow.response.content = blockImage;
+                  flow.response.headers["content-type"] = "image/jpeg"
 
 addons = [NSFWDetector()]
