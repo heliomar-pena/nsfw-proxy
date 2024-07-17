@@ -29,21 +29,30 @@ class NSFWDetector:
     def request(self, flow: http.HTTPFlow) -> None:
       blackListed = False;
       url = flow.request.pretty_host
+      # Some ads add link of target website in the referrer header
+      referer_url = flow.request.headers.get('Referer')
 
       for site in blacklist:
          blackListed = site in url
+         referrerBlackListed =  site in (referer_url or "")
         
-         if (blackListed):
+         if (blackListed or referrerBlackListed):
           flow.request.headers["x-blacklisted-site"] = 'True'
           break
 
     def response(self, flow: http.HTTPFlow) -> None:
-        print(flow.request.headers)
+        if (flow.response.headers.get("Content-Type", "").startswith("video")):
+           if (flow.request.headers.get('x-blacklisted-site') == 'True'):
+              flow.response.content = None
+              flow.response.status_code = 403
+              flow.response.reason = b"Forbidden"
+              return
 
         if (flow.response.headers.get("Content-Type", "").startswith("image")):
           if (flow.request.headers.get('x-blacklisted-site') == 'True'):
            blockImage = open('block-image.jpeg', mode='rb').read()
            flow.response.content = blockImage;
+           flow.response.status_code = 403
            flow.response.headers["content-type"] = "image/jpeg"
            return
 
