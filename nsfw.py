@@ -6,16 +6,16 @@ import tempfile
 import json
 from blacklist import blacklist
 
-def checkNSFWPredictions(predictions):
-   isSafe = False;
-   for prediction in predictions:
-      if (isSafe == False):
-        category = prediction['category']
-        if (category == 'hentai' or category == 'porn' or category == 'sexy'):
-           isSafe = prediction['probability'] > 0.1
-      else:
-        break
-   return isSafe
+def checkNSFWPredictions(predictions, level):
+  isNSFW = False;
+  for prediction in predictions:
+    category = prediction['category']
+    if (category == 'hentai' or category == 'porn' or category == 'sexy'):
+      isNSFW = prediction['probability'] > level
+      print('category|prediction|isnsfw', category, prediction['probability'], isNSFW)
+
+      if (isNSFW): break
+  return isNSFW
 
 class NSFWDetector:
     def load(self, loader):
@@ -25,20 +25,26 @@ class NSFWDetector:
           help="You will want that this command run when we wanted to classify image with IA. It should include <dir>.",
           default=""
         )
+        loader.add_option(
+           name="level",
+           typespec=str,
+           help="Depending of the command you use to classify the image, you will get different measure types. Add here the min value accepted to consider it nsfw.",
+           default="0.3"
+        )
 
     def request(self, flow: http.HTTPFlow) -> None:
-      blackListed = False;
-      url = flow.request.pretty_host
+      blacklisted = False
+      # Gets only the second level domain and the top level domain. E.g: www.de.google.com -> google.com
+      url = '.'.join(flow.request.pretty_host.replace('/', '').split('.')[-2:])
       # Some ads add link of target website in the referrer header
-      referer_url = flow.request.headers.get('Referer')
+      referer_url = '.'.join((flow.request.headers.get('Referer') or "").replace('/', '').split('.')[-2:])
+      
+      blacklisted = url in blacklist
 
-      for site in blacklist:
-         blackListed = site in url
-         referrerBlackListed =  site in (referer_url or "")
-        
-         if (blackListed or referrerBlackListed):
-          flow.request.headers["x-blacklisted-site"] = 'True'
-          break
+      if (blacklisted == False and len(referer_url) > 0): blacklisted = referer_url in blacklist
+
+      if (blacklisted):
+        flow.request.headers["x-blacklisted-site"] = 'True'
 
     def response(self, flow: http.HTTPFlow) -> None:
         if (flow.response.headers.get("Content-Type", "").startswith("video")):
@@ -59,17 +65,20 @@ class NSFWDetector:
           with tempfile.NamedTemporaryFile(delete_on_close=True,delete=True) as tempFile:
             tempFile.write(flow.response.content);
 
+            level = float(ctx.options.level)
             command = ctx.options.command.replace('<dir>', tempFile.name);
             commandArr = command.split(' ');
             result = subprocess.run(commandArr, capture_output=True);
 
             if (result.stderr):
+              print("Error processing image: ", result.stderr)
               return
 
             if (result.stdout):
                 jsonResult = json.loads(result.stdout)
 
-                isNSFW = jsonResult['has_nudity'] == True or checkNSFWPredictions(jsonResult['predictions'])
+                print('level: ', level)
+                isNSFW = jsonResult['has_nudity'] == True or checkNSFWPredictions(jsonResult['predictions'], level)
 
                 if (isNSFW):
                   blockImage = open('block-image.jpeg', mode='rb').read()

@@ -1,4 +1,4 @@
-blacklist = [
+blacklist = (
   "007angels.com",
   "00go.com",
   "00webcams.com",
@@ -28014,4 +28014,4 @@ blacklist = [
   "kekma.net",
   "dogehls.xyz",
   "nhentai.com"
-]
+)
