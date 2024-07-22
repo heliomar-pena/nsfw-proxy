@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-> [!IMPORTANT]
-> W.I.P
-=======
 # NSFW Proxy
->>>>>>> Stashed changes
 
 Script in python that can be used for creating a self-hosted proxy for NOT SAFE FOR WORK content filtering.
 
