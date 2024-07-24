@@ -62,6 +62,9 @@ class NSFWDetector:
            flow.response.headers["content-type"] = "image/jpeg"
            return
 
+          if (len(ctx.options.command) == 0):
+            return
+
           with tempfile.NamedTemporaryFile(delete_on_close=True,delete=True) as tempFile:
             tempFile.write(flow.response.content);
 
