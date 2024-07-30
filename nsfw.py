@@ -4,7 +4,13 @@ from mitmproxy import http
 from mitmproxy import ctx
 import tempfile
 import json
+import os
 from blacklist import blacklist
+
+script_dir = os.path.dirname(__file__)
+block_dir = 'block-image.png'
+abs_block_path = os.path.join(script_dir, block_dir)
+blockImage = open(abs_block_path, mode='rb').read()
 
 def checkNSFWPredictions(predictions, level):
   isNSFW = False;
@@ -56,10 +62,9 @@ class NSFWDetector:
 
         if (flow.response.headers.get("Content-Type", "").startswith("image")):
           if (flow.request.headers.get('x-blacklisted-site') == 'True'):
-           blockImage = open('block-image.jpeg', mode='rb').read()
            flow.response.content = blockImage;
            flow.response.status_code = 403
-           flow.response.headers["content-type"] = "image/jpeg"
+           flow.response.headers["content-type"] = "image/png"
            return
 
           if (len(ctx.options.command) == 0):
@@ -84,8 +89,7 @@ class NSFWDetector:
                 isNSFW = jsonResult['has_nudity'] == True or checkNSFWPredictions(jsonResult['predictions'], level)
 
                 if (isNSFW):
-                  blockImage = open('block-image.jpeg', mode='rb').read()
                   flow.response.content = blockImage;
-                  flow.response.headers["content-type"] = "image/jpeg"
+                  flow.response.headers["content-type"] = "image/png"
 
 addons = [NSFWDetector()]
