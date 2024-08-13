@@ -1,0 +1,13 @@
+services:
+  nsfw_proxy:
+    build:
+      context: .
+      args:
+        - INSTALL_BONK=$INSTALL_BONK
+    ports: 
+      - "13000:8080"
+    volumes:
+      - mitmproxy-nsfw-proxy:/root/.mitmproxy
+
+volumes:
+  mitmproxy-nsfw-proxy:

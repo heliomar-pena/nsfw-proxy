@@ -1,4 +1,4 @@
-#!/user/bin/env python3.10.14
+#!/user/bin/env python3.12
 import subprocess
 from mitmproxy import http
 from mitmproxy import ctx
@@ -13,7 +13,6 @@ def checkNSFWPredictions(predictions, level):
     category = prediction['category']
     if (category == 'hentai' or category == 'porn' or category == 'sexy'):
       isNSFW = prediction['probability'] > level
-      print('category|prediction|isnsfw', category, prediction['probability'], isNSFW)
 
       if (isNSFW): break
   return isNSFW
