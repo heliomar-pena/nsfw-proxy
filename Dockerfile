@@ -6,8 +6,6 @@ COPY . /home/app
 
 ARG INSTALL_BONK="false"
 
-RUN echo "$INSTALL_BONK";
-
 WORKDIR /home/app/tools
 
 # Installing rust. Needed for installing mitmproxy as python dependency
