@@ -1,4 +1,4 @@
-FROM python:3.12-bookworm
+FROM python:3.12-bookworm AS nsfw_proxy
 
 RUN mkdir -p /home/app
 
@@ -15,5 +15,16 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 RUN pip install -r requirements.txt --break-system-packages
 
 EXPOSE 8080
+VOLUME /root/.mitmproxy
 
-ENTRYPOINT [ "mitmdump", "--listen-port", "8080" ]
+ENTRYPOINT [ "mitmdump", "-s", "nsfw.py", "--listen-port", "8080" ]
+
+FROM nsfw_proxy AS nsfw_proxy_bonk
+
+RUN git clone https://git.sr.ht/~jamesponddotco/bonk && cd /home/app/bonk && make && make install;
+
+WORKDIR /home/app
+
+RUN pip install -r requirements.txt --break-system-packages
+
+ENTRYPOINT [ "mitmdump", "-s", "nsfw.py", "--set", "command=bonk <dir>", "--set", "level=0.2", "--listen-port", "8080" ]
