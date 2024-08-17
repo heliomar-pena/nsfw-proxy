@@ -35,31 +35,20 @@ Script in python that can be used for creating a self-hosted proxy for NOT SAFE 
 - [ ] Adding **How to** configure it on a router / modem for all users in a same network. (This will work for public networks which wanted filter this content and for entire families).
 - [ ] Adding **How to** configure it on a VPS for using out of the house. (In case someone doesn't wanted use it only locally but also when he is out).
 
-## How to install?
+## Install using docker
 
-### Installing dependencies
+## Install using Python 3.12
 
-#### Mitm Proxy
+### Dependencies
 
-mitmproxy is a free and open source interactive HTTPS proxy. In this project it is used for intercept, inspect, modify and replay web traffic such as HTTP/1, HTTP/2, WebSockets, or any other SSL/TLS-protected protocols. With the intention of analyze if a resource (image, gif, video, streaming) contain undesearable content, then blocking it according to your configuration.
+The dependencies you'll need are only Python 3.12 or bigger and any CLI AI Classifier Tool from the [list of supported cli classifiers](./docs/supported_cli_classifiers.md).
 
-You can download it here: https://mitmproxy.org/
+| Name               | Website                                                        | Optional | Description                                                                                                                                          |
+| ------------------ | -------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Python             | [Here](https://www.python.org/downloads/release/python-3120/)  | **No**   | Used for install mitmproxy and the script you'll be running in this project is written in Python                                                     |
+| Classifier AI Tool | [See supported list here](./docs/supported_cli_classifiers.md) | **YES**  | Used for classifying all images no matter its origin. E.g if you are on instagram and appears a NSFW image it will be catched by the classifier tool. |
 
-#### Command Line AI Classifier
-
-This project allow you to decide which AI tool to use for classify your content. The one I personally use by its speed and low cost on memory is BONK, and it is the only one supported currently by the project. If you know one that you want to be supported on the project please leave it as an issue and I will check it.
-
-Here are classified the **supported** CLI AI Classifier tools. They have a tag called Installing Difficulty what will indicate if you need or not technical knowledge to install it:
-
-- **HARD**: You will need to know about git and the programming language that it is developed. Probably will be different to install it on windows, linux or mac.
-- **MEDIUM**: To install it you will need to read a documentation and follow different steps for your operative system.
-- **EASY**: You only download it and click continue, continue, accept, continue, finish. (Or install it in your dependency manager if you're on linux)
-
-|Name|Website|Installing difficulty|Language|
-|----|-------|---------------------|--------|
-|Bonk|[Here](https://sr.ht/~jamesponddotco/bonk/)|Hard|Rust|
-
-#### Cloning the project
+### Cloning the project and installing Python's dependencies
 
 For cloning the project only run this command or download it as zip [here](https://github.com/heliomar-pena/nsfw-proxy/archive/refs/heads/dev.zip).
 
@@ -67,11 +56,40 @@ For cloning the project only run this command or download it as zip [here](https
 git clone https://github.com/heliomar-pena/nsfw-proxy.git
 ```
 
-The dependencies on the requirements.txt file are only for development, since you will run this project with mitmproxy which has its own python version installed and already have mitmproxy as a dependency, so don't worry for that file for now.
+### Installation
+
+Once cloned the repository, you can install the dependencies on the `requirements.txt` file. For this you can follow any guide on internet [like this](https://www.freecodecamp.org/news/python-requirementstxt-explained#how-to-work-with-a-requirements-txt-file) or try with the next command:
+
+```sh
+pip install -r requirements.txt
+```
+
+In case you are seeing an error similar to this: 'error:externally-managed-environment', the recommended is that you install it using the [virtual env feature of python](https://docs.python.org/3/library/venv.html)
+
+#### Install it using virtual envs
+
+```sh
+python3.12 -m venv nsfw_proxy
+nsfw_proxy/bin/pip install -r requirements.txt
+```
+
+#### Force installation on your system (could break some of your system dependencies)
+
+This will create an isolated space for saving the dependencies that you're installing, so avoiding breaking your system during the installation of new dependencies. You can check the [doc](https://docs.python.org/3/library/venv.html) for more information.
+
+In case it didn't worked for you, you can always install the dependencies directly on your system using. Although this method is **highly unrecommended**
+
+```sh
+pip install -r requirements.txt --break-system-packages
+```
 
 ### How to run the project
 
 To run it, you need to open the file using [mitmdump](https://mitmproxy.org/#mitmdump), which allow us to interact with the HTTP requests using python.
+
+You can run it on your terminal, it's installed during the [installing python's dependencies step](#cloning-the-project-and-installing-pythons-dependencies) when you run `pip install -r requirements.txt` command.
+
+In case you installed it on a [virtual env](#recommended-way-to-install-dependencies-solves-errorexternally-managed-environment)
 
 At the moment of run mitmdump, you need to make a call to this file and also declare the arguments that will decide the behaviour of the proxy. Here is a basic example:
 
@@ -101,15 +119,14 @@ Then you can modify the behaviour of the script using `--set` to insert argument
 
 In this section you will see all the commands that you can pass to `--set` and its allowed values.
 
-|Name|Optional|Default value|Value Type|Example values|Note|
-|----|--------|-------------|----------|--------------|----|
-|command|:white_check_mark:|""|str|`bonk <dir>`|It should include `<dir>` which is the slot where the script will include the image's path|
-|level|:white_check_mark:|0.3|float|0.1|You can use a float or an integer: 0.1, 0.2, 1, 3|
+| Name    | Optional           | Default value | Value Type | Example values | Note                                                                                       |
+| ------- | ------------------ | ------------- | ---------- | -------------- | ------------------------------------------------------------------------------------------ |
+| command | :white_check_mark: | ""            | str        | `bonk <dir>`   | It should include `<dir>` which is the slot where the script will include the image's path |
+| level   | :white_check_mark: | 0.3           | float      | 0.1            | You can use a float or an integer: 0.1, 0.2, 1, 3                                          |
 
 #### Installing certificates
 
-> [!NOTE]
-> https://docs.mitmproxy.org/stable/concepts-certificates/
+> [!NOTE] > https://docs.mitmproxy.org/stable/concepts-certificates/
 > Mitmproxy can decrypt encrypted traffic on the fly, as long as the client trusts mitmproxy’s built-in certificate authority. Usually this means that the mitmproxy CA certificate has to be installed on the client device.
 
 Before start navigating using our proxy we need to install the certificates. At this moment, if you try to connect to the proxy and then navigate on the web probably you'll found a message rejecting the conection and some warnings, this is because your browser or your computer doesn't trust in the proxy and needs the certificates to trust in him.
