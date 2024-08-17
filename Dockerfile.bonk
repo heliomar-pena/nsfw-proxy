@@ -1,0 +1,11 @@
+# Run NSFW Proxy with BONK CLI image classifier https://sr.ht/~jamesponddotco/bonk/
+FROM nsfw_proxy:0.0.1
+
+# Installing CLI AI Classifier tools dependencies
+RUN git clone https://git.sr.ht/~jamesponddotco/bonk && cd /home/app/bonk && make && make install;
+
+WORKDIR /home/app
+
+RUN pip install -r requirements.txt --break-system-packages
+
+ENTRYPOINT [ "mitmdump", "-s", "nsfw.py", "--set", "command=bonk <dir>", "--set", "level=0.2", "--listen-port", "8080" ]

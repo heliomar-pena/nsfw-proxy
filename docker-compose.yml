@@ -2,12 +2,12 @@ services:
   nsfw_proxy:
     build:
       context: .
-      args:
-        - INSTALL_BONK=$INSTALL_BONK
+      dockerfile: Dockerfile
     ports: 
       - "13000:8080"
-    volumes:
-      - mitmproxy-nsfw-proxy:/root/.mitmproxy
-
-volumes:
-  mitmproxy-nsfw-proxy:
+  nsfw_proxy_bonk:
+    build:
+      context: .
+      dockerfile: Dockerfile.bonk
+    ports: 
+      - "13000:8080"
