@@ -1,7 +1,7 @@
 import os
 import random
 
-script_dir = os.path.dirname(__file__)
+script_dir = os.path.dirname(os.path.dirname(__file__))
 images_dir = "images"
 
 abs_image_path = os.path.join(script_dir, images_dir);
