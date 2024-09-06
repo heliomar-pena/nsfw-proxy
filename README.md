@@ -151,7 +151,11 @@ At the moment of run mitmdump, you need to make a call to this file and also dec
 mitmdump -s ./nsfw.py --set command="bonk <dir>" --set level=0.1
 ```
 
-If you have installed it using virtual envs (venv), your mitmdump binary would be on the virtual env bin folder
+If you have installed it using virtual envs (venv), your mitmdump binary would be on the virtual env bin folder. [here](#install-it-using-virtual-envs) the virtual env was `nsfw_proxy` and the folder would be created on the same folder where you executed the command, so if you're still on that folder you just have to run:
+
+```sh
+./nsfw_proxy/bin/mitmdump -s ./nsfw.py --set command="bonk <dir>" --set level=0.1
+```
 
 And here is are we doing splitted for explanation:
 
