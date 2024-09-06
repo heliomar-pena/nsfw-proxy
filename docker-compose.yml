@@ -1,0 +1,16 @@
+services:
+  nsfw_proxy:
+    image: heliomarpena/nsfw_proxy:latest
+    ports: 
+      - "13000:8080"
+    volumes:
+      - mitmproxy-nsfw-proxy:/root/.mitmproxy
+  nsfw_proxy_bonk:
+    image: heliomarpena/nsfw_proxy:latest-bonk
+    ports: 
+      - "13000:8080"
+    volumes:
+      - mitmproxy-nsfw-proxy:/root/.mitmproxy
+
+volumes:
+  mitmproxy-nsfw-proxy:

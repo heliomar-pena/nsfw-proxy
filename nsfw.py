@@ -1,11 +1,12 @@
-#!/user/bin/env python3.10.14
+#!/user/bin/env python3.12
 import subprocess
 from mitmproxy import http
 from mitmproxy import ctx
 import tempfile
 import json
-from blacklist import blacklist
-from get_random_image import getRandomImage
+from constants.blacklist import blacklist
+from utils.get_random_image import getRandomImage
+import re
 
 def checkNSFWPredictions(predictions, level):
   isNSFW = False;
@@ -13,7 +14,6 @@ def checkNSFWPredictions(predictions, level):
     category = prediction['category']
     if (category == 'hentai' or category == 'porn' or category == 'sexy'):
       isNSFW = prediction['probability'] > level
-      print('category|prediction|isnsfw', category, prediction['probability'], isNSFW)
 
       if (isNSFW): break
   return isNSFW
@@ -34,18 +34,11 @@ class NSFWDetector:
         )
 
     def request(self, flow: http.HTTPFlow) -> None:
-      blacklisted = False
-      # Gets only the second level domain and the top level domain. E.g: www.de.google.com -> google.com
-      url = '.'.join(flow.request.pretty_host.replace('/', '').split('.')[-2:])
-      # Some ads add link of target website in the referrer header
-      referer_url = '.'.join((flow.request.headers.get('Referer') or "").replace('/', '').split('.')[-2:])
-      
-      blacklisted = url in blacklist
-
-      if (blacklisted == False and len(referer_url) > 0): blacklisted = referer_url in blacklist
-
-      if (blacklisted):
-        flow.request.headers["x-blacklisted-site"] = 'True'
+      urlProtocolRegExp = "(https|http)?(://)?(www\.)?[/]*"
+      # Some ads add link of target website in the referrer header. So we can block ads for specific pages
+      referer_url = re.sub(urlProtocolRegExp, "", (flow.request.headers.get('Referer') or ""))
+      site_url = re.sub(urlProtocolRegExp, "", flow.request.pretty_host)
+      flow.request.headers["x-blacklisted-site"] = str(site_url in blacklist or (len(referer_url) > 0 and referer_url in blacklist))
 
     def response(self, flow: http.HTTPFlow) -> None:
         if (flow.response.headers.get("Content-Type", "").startswith("video")):
