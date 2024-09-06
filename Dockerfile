@@ -12,12 +12,13 @@ RUN apt install make curl git build-essential scdoc -y
 RUN curl --proto '=https' -tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-RUN pip install -r requirements.txt --break-system-packages
+RUN python -m venv nsfw_proxy
+RUN nsfw_proxy/bin/pip install -r requirements.txt
 
 EXPOSE 8080
 VOLUME /root/.mitmproxy
 
-ENTRYPOINT [ "mitmdump", "-s", "nsfw.py", "--listen-port", "8080" ]
+ENTRYPOINT [ "./nsfw_proxy/bin/mitmdump", "-s", "nsfw.py", "--listen-port", "8080" ]
 
 FROM nsfw_proxy AS nsfw_proxy_bonk
 
@@ -25,6 +26,4 @@ RUN git clone https://git.sr.ht/~jamesponddotco/bonk && cd /home/app/bonk && mak
 
 WORKDIR /home/app
 
-RUN pip install -r requirements.txt --break-system-packages
-
-ENTRYPOINT [ "mitmdump", "-s", "nsfw.py", "--set", "command=bonk <dir>", "--set", "level=0.2", "--listen-port", "8080" ]
+ENTRYPOINT [ "./nsfw_proxy/bin/mitmdump", "-s", "nsfw.py", "--set", "command=bonk <dir>", "--set", "level=0.2", "--listen-port", "8080" ]
