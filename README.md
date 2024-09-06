@@ -151,6 +151,8 @@ At the moment of run mitmdump, you need to make a call to this file and also dec
 mitmdump -s ./nsfw.py --set command="bonk <dir>" --set level=0.1
 ```
 
+If you have installed it using virtual envs (venv), your mitmdump binary would be on the virtual env bin folder
+
 And here is are we doing splitted for explanation:
 
 - `mitmdump`: Calling mitmdump command which starts an HTTP proxy server and allow us to use a python script to interact with him.
